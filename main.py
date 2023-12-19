@@ -4,6 +4,14 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
+def custom_floor(a, precision=0):
+    return np.true_divide(np.floor(a * 10 ** precision), 10 ** precision)
+
+
+def custom_ceil(a, precision=0):
+    return np.true_divide(np.ceil(a * 10 ** precision), 10 ** precision)
+
+
 # func should be (n: int) -> int
 def calculate_infinite_series(func, delta=1e-6):
     def term_generator():
@@ -45,16 +53,12 @@ def make_time_function(max_temperature, thermal_conductivity, rod_length):
     return time_function
 
 
-def demo_display():
+def demo_display(max_temperature, rod_length, thermal_conductivity):
     # Parameters
     time_from = 0
     time_to = 0.1
     time_iterations = 100
-
-    max_temperature = 100.0  # Maximum temperature
-    rod_length = 10  # Length of the rod
     num_points = 500  # Number of points along the rod
-    thermal_conductivity = 407  # thermal conductivity of 407 is copper
     delta_temperature = 0.001 * max_temperature  # Homogeneity threshold
 
     time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
@@ -106,8 +110,58 @@ def demo_display():
     plt.show()
 
 
+def find_max_division_length(max_time, rod_length, max_temperature, thermal_conductivity, desired_min_temperature,
+                             delta=1e-4):
+    time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
+    max_heated_right_end_temperature = time_function(rod_length, max_time)
+    if max_heated_right_end_temperature > desired_min_temperature:
+        print('rod length is good enough')
+        return rod_length
+
+    counter = 0
+
+    delta_length = rod_length / 2
+    division_length = rod_length - delta_length
+
+    while counter < 100:
+        max_heated_right_end_temperature = time_function(division_length, max_time)
+        if max_heated_right_end_temperature > desired_min_temperature and abs(
+                max_heated_right_end_temperature - desired_min_temperature) < delta:
+            print('solution found')
+            return division_length
+        delta_length /= 2
+        if max_heated_right_end_temperature < desired_min_temperature:
+            print(f'shorter, {delta_length=}, {division_length=}')
+            division_length -= delta_length
+        else:
+            print(f'longer, {delta_length=}, {division_length=}')
+            division_length += delta_length
+
+        counter += 1
+
+    return None
+
+
 def main():
-    demo_display()
+    max_temperature = 100.0  # Maximum temperature
+    rod_length = 10  # Length of the rod
+    thermal_conductivity = 407  # thermal conductivity of 407 is copper
+    # demo_display(max_temperature, rod_length, thermal_conductivity)
+    # return
+
+    desired_min_temperature = 40.0
+    max_time = 0.005
+    max_division_length = find_max_division_length(max_time, rod_length, max_temperature, thermal_conductivity,
+                                                   desired_min_temperature)
+    time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
+    print(f'desired temperature: {desired_min_temperature}, calculated: {time_function(max_division_length, max_time)}')
+
+    whole_divisions = np.ceil(rod_length / max_division_length)
+    whole_division_length = rod_length / whole_divisions
+    print(
+        f'whole division result: {time_function(whole_division_length, max_time)}, division length: {whole_division_length}')
+
+    # now minimise either max_temperature or max_time to get exactly desired_min_temperature with divison set as whole_division_length
 
 
 if __name__ == '__main__':
