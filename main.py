@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+
 # func should be (n: int) -> int
 def calculate_infinite_series(func, delta=1e-6):
     def term_generator():
@@ -42,6 +43,7 @@ def make_time_function(max_temperature, thermal_conductivity, rod_length):
         return max_temperature + 4. * max_temperature / pi * calculate_infinite_series(one_iteration)
 
     return time_function
+
 
 def demo_display():
     # Parameters
@@ -102,6 +104,7 @@ def demo_display():
     plt.ylabel('Temperature')
     plt.title('Temperature Distribution in a Rod over Time')
     plt.show()
+
 
 def main():
     demo_display()
