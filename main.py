@@ -3,6 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+DEBUG = False
+
+
+def dprint(*args, **kwargs):
+    if DEBUG:
+        print(*args, **kwargs)
+
 
 def custom_floor(a, precision=0):
     return np.true_divide(np.floor(a * 10 ** precision), 10 ** precision)
@@ -110,36 +117,62 @@ def demo_display(max_temperature, rod_length, thermal_conductivity):
     plt.show()
 
 
-def find_max_division_length(max_time, rod_length, max_temperature, thermal_conductivity, desired_min_temperature,
-                             delta=1e-4):
-    time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
-    max_heated_right_end_temperature = time_function(rod_length, max_time)
-    if max_heated_right_end_temperature > desired_min_temperature:
-        print('rod length is good enough')
-        return rod_length
+# func should be a closure with one argument only (the one that can change), only works for monotonous functions (or monotonous values between arg_from and arg_to)
+def find_function_argument_by_value(func, desired_value, arg_from, arg_to, max_iterations=1000, delta=1e-4):
+    if arg_from >= arg_to:
+        raise Exception('arg_from must be less than arg_to')
+    function_slope = 1 if func(arg_from + delta) - func(arg_from) > 0 else -1
 
+    arg_delta = (arg_to - arg_from) / 2
+    candidate_argument = arg_to - arg_delta
     counter = 0
 
-    delta_length = rod_length / 2
-    division_length = rod_length - delta_length
+    while counter < max_iterations:
+        candidate_value = func(candidate_argument)
+        if candidate_value > desired_value and abs(candidate_value - desired_value) < delta:
+            dprint('solution found')
+            return candidate_argument
 
-    while counter < 100:
-        max_heated_right_end_temperature = time_function(division_length, max_time)
-        if max_heated_right_end_temperature > desired_min_temperature and abs(
-                max_heated_right_end_temperature - desired_min_temperature) < delta:
-            print('solution found')
-            return division_length
-        delta_length /= 2
-        if max_heated_right_end_temperature < desired_min_temperature:
-            print(f'shorter, {delta_length=}, {division_length=}')
-            division_length -= delta_length
+        arg_delta /= 2
+
+        dprint(f'idx {counter}: shorter, {arg_delta=}, {candidate_argument=}')
+
+        if candidate_value < desired_value:
+            candidate_argument += arg_delta * function_slope
         else:
-            print(f'longer, {delta_length=}, {division_length=}')
-            division_length += delta_length
+            candidate_argument -= arg_delta * function_slope
 
         counter += 1
 
     return None
+
+
+def find_max_division_length(max_time, rod_length, max_temperature, thermal_conductivity, desired_min_temperature):
+    time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
+    max_heated_right_end_temperature = time_function(rod_length, max_time)
+    if max_heated_right_end_temperature > desired_min_temperature:
+        dprint('rod length is good enough')
+
+        return rod_length
+
+    return find_function_argument_by_value(lambda x: time_function(x, max_time), desired_min_temperature, 0, rod_length)
+
+
+def call_time_function_with_variable_max_temp(max_temperature, thermal_conductivity, rod_length, x, t):
+    time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
+
+    return time_function(x, t)
+
+
+def print_end_conditions(conditions_name, max_temperature, max_time, desired_min_temperature, estimated_max_temperature,
+                         estimated_min_temperature, estimated_time, estimated_division_length, divisions):
+    print('*' * 12 + ' ' + conditions_name + ' ' + '*' * 12)
+    print(
+        f'Limitations: \n\nMax temperature: {max_temperature}º, min temperature: {desired_min_temperature}º, time: {max_time} units\n')
+    print(
+        f'Estimations: \n\nMax temperature: {estimated_max_temperature}º, min temperature: {estimated_min_temperature}º, time: {estimated_time} units')
+    print(f'Rod division length: {estimated_division_length}, divisions: {divisions}')
+    print('*' * 36, end='\n\n')
 
 
 def main():
@@ -153,15 +186,62 @@ def main():
     max_time = 0.005
     max_division_length = find_max_division_length(max_time, rod_length, max_temperature, thermal_conductivity,
                                                    desired_min_temperature)
+    if not max_division_length:
+        print("Verdict: Impossible to heat the rod in these conditions")
+        return
+
     time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
-    print(f'desired temperature: {desired_min_temperature}, calculated: {time_function(max_division_length, max_time)}')
 
     whole_divisions = np.ceil(rod_length / max_division_length)
     whole_division_length = rod_length / whole_divisions
-    print(
-        f'whole division result: {time_function(whole_division_length, max_time)}, division length: {whole_division_length}')
 
-    # now minimise either max_temperature or max_time to get exactly desired_min_temperature with divison set as whole_division_length
+    print_end_conditions('Regular solution',
+                         max_temperature=max_temperature,
+                         max_time=max_time,
+                         desired_min_temperature=desired_min_temperature,
+                         estimated_max_temperature=max_temperature,
+                         estimated_min_temperature=time_function(whole_division_length, max_time),
+                         estimated_time=max_time,
+                         estimated_division_length=whole_division_length,
+                         divisions=whole_divisions)
+
+    optimal_time = find_function_argument_by_value(lambda x: time_function(whole_division_length, x),
+                                                   desired_min_temperature, 0, max_time)
+    if not optimal_time:
+        print("Verdict: Couldn't optimise time")
+        return
+
+    print('We can optimise either by time or by max temperature:')
+    print_end_conditions('Optimised time',
+                         max_temperature=max_temperature,
+                         max_time=max_time,
+                         desired_min_temperature=desired_min_temperature,
+                         estimated_max_temperature=max_temperature,
+                         estimated_min_temperature=time_function(whole_division_length, optimal_time),
+                         estimated_time=optimal_time,
+                         estimated_division_length=whole_division_length,
+                         divisions=whole_divisions)
+
+    optimal_max_temperature = find_function_argument_by_value(
+        lambda x: call_time_function_with_variable_max_temp(x, thermal_conductivity, whole_division_length,
+                                                            whole_division_length, max_time),
+        desired_min_temperature, 0, max_temperature)
+
+    print_end_conditions('Optimised max temperature',
+                         max_temperature=max_temperature,
+                         max_time=max_time,
+                         desired_min_temperature=desired_min_temperature,
+                         estimated_max_temperature=optimal_max_temperature,
+                         estimated_min_temperature=call_time_function_with_variable_max_temp(optimal_max_temperature,
+                                                                                             thermal_conductivity,
+                                                                                             whole_division_length,
+                                                                                             whole_division_length,
+                                                                                             max_time),
+                         estimated_time=max_time,
+                         estimated_division_length=whole_division_length,
+                         divisions=whole_divisions)
+
+    print('Verdict: all optimisations successful')
 
 
 if __name__ == '__main__':
