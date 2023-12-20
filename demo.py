@@ -13,7 +13,7 @@ def print_end_conditions(conditions_name, max_temperature, max_time, desired_min
         f'Limitations: \n\nMax temperature: {max_temperature}º, min temperature: {desired_min_temperature}º, time: {max_time} units\n')
     print(
         f'Estimations: \n\nMax temperature: {estimated_max_temperature}º, min temperature: {estimated_min_temperature}º, time: {estimated_time} units')
-    print(f'Rod division length: {estimated_division_length}, divisions: {divisions}')
+    print(f'Rod division length: {estimated_division_length:.2f}, divisions: {int(divisions*2)}')
     print('*' * 36, end='\n\n')
 
 
@@ -76,16 +76,17 @@ def temperature_function_demo(max_temperature, rod_length, thermal_conductivity)
 
 
 def rod_division_demo(max_temperature, rod_length, thermal_conductivity, desired_min_temperature, max_time):
-    max_division_length = find_max_division_length(max_time, rod_length, max_temperature, thermal_conductivity,
+    half_rod_length = rod_length / 2
+    max_division_length = find_max_division_length(max_time, half_rod_length, max_temperature, thermal_conductivity,
                                                    desired_min_temperature)
     if not max_division_length:
         print("Verdict: Impossible to heat the rod in these conditions")
         return
 
-    time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
+    time_function = make_time_function(max_temperature, thermal_conductivity, half_rod_length)
 
-    whole_divisions = np.ceil(rod_length / max_division_length)
-    whole_division_length = rod_length / whole_divisions
+    whole_divisions = np.ceil(half_rod_length / max_division_length)
+    whole_division_length = half_rod_length / whole_divisions
 
     print_end_conditions('Regular solution',
                          max_temperature=max_temperature,

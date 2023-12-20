@@ -14,4 +14,7 @@ def main():
 
 
 if __name__ == '__main__':
+    # TODO:
+    #  1) add animation of heating the rod with calculated divisions
+    #  2) add typing and black formatter
     main()
