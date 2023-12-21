@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 from heating import make_time_function, find_max_division_length, find_function_argument_by_value, \
-    call_time_function_with_variable_max_temp
+    call_time_function_with_variable_config
 
 
 def print_end_conditions(conditions_name, max_temperature, max_time, desired_min_temperature, estimated_max_temperature,
@@ -13,7 +13,7 @@ def print_end_conditions(conditions_name, max_temperature, max_time, desired_min
         f'Limitations: \n\nMax temperature: {max_temperature}º, min temperature: {desired_min_temperature}º, time: {max_time} units\n')
     print(
         f'Estimations: \n\nMax temperature: {estimated_max_temperature}º, min temperature: {estimated_min_temperature}º, time: {estimated_time} units')
-    print(f'Rod division length: {estimated_division_length:.2f}, divisions: {int(divisions*2)}')
+    print(f'Rod division length: {estimated_division_length:.2f}, divisions: {int(divisions * 2)}')
     print('*' * 36, end='\n\n')
 
 
@@ -40,7 +40,7 @@ def temperature_function_demo(max_temperature, rod_length, thermal_conductivity)
     # Create figure and axis for the plot
     fig, ax = plt.subplots()
     line, = ax.plot(x_values, initial_temperatures, color='red')
-    frame_text = ax.text(0.7, 0.9, '', transform=ax.transAxes)
+    frame_text = ax.text(0.7, 0.9, '', transform=ax.transAxes, bbox={'facecolor':'w', 'alpha':0.5, 'pad':5}, ha="center")
 
     iteration_num = 0
 
@@ -71,7 +71,73 @@ def temperature_function_demo(max_temperature, rod_length, thermal_conductivity)
     # Set plot parameters
     plt.xlabel('Position along the rod')
     plt.ylabel('Temperature')
-    plt.title('Temperature Distribution in a Rod over Time')
+    plt.title(f'Temperature distribution, max temp: {max_temperature:.2f}')
+    plt.show()
+
+
+# temp at x coordinate of the rod with length 'rod_length' at time t
+def rod_temperature_demo(max_temperature, rod_length, thermal_conductivity, heaters_amount, rod_part_length, graph_max_temperature=None,
+                         time_from=0, time_to=0.1, time_iterations=100, rod_part_points_amount=500):
+    # Parameters
+    time_function = make_time_function(max_temperature, thermal_conductivity, rod_part_length)
+
+    desired_temperature = time_function(rod_part_length, time_to)
+
+    # Create initial temperature distribution along the rod
+    rod_part_x_values = np.linspace(0, rod_part_length, rod_part_points_amount)
+    rod_part_temperatures = np.array([time_function(x, 0) for x in rod_part_x_values])
+
+    x_values = np.linspace(0, rod_length, heaters_amount * 2 * rod_part_points_amount)
+    rod_temperatures = np.tile(
+        np.concatenate(
+            (np.flip(rod_part_temperatures), rod_part_temperatures)
+        ),
+        heaters_amount)
+
+    # Create figure and axis for the plot
+    fig, ax = plt.subplots()
+    ax.set_ylim([0, graph_max_temperature or max_temperature])
+    line, = ax.plot(x_values, rod_temperatures, color='red')
+    ax.plot(x_values, [desired_temperature] * heaters_amount * 2 * rod_part_points_amount, color='grey')
+    frame_text = ax.text(0.7, 0.9, '', transform=ax.transAxes, bbox={'facecolor':'w', 'alpha':0.5, 'pad':5}, ha="center")
+
+    iteration_num = -1
+
+    # Update function for animation
+    def update(frame):
+        nonlocal iteration_num
+
+        current_rod_part_temperatures = np.array([time_function(x, frame) for x in rod_part_x_values])
+        current_rod_temperatures = np.tile(
+            np.concatenate(
+                (np.flip(current_rod_part_temperatures), current_rod_part_temperatures)
+            ),
+            heaters_amount)
+
+        current_rod_temperatures[current_rod_temperatures < 0] = 0
+
+        # Update the plot with new temperatures
+        line.set_ydata(current_rod_temperatures.tolist())
+
+        if iteration_num > -1:
+            frame_text.set_text(f'Time passed: {iteration_num}/{time_iterations}')
+
+        # Check for homogeneity to stop the animation
+        if iteration_num == time_iterations:
+            ani.event_source.stop()  # Stop animation when homogeneous
+
+        iteration_num += 1
+
+        return line, frame_text
+
+    # Create the animation
+    ani = FuncAnimation(fig, update, frames=np.linspace(time_from, time_to, time_iterations).tolist(), interval=100,
+                        blit=True)
+
+    # Set plot parameters
+    plt.xlabel('Position along the rod')
+    plt.ylabel('Temperature')
+    plt.title(f'Temperature distribution, max temp: {max_temperature:.2f}, max time: {time_to:.5f}')
     plt.show()
 
 
@@ -83,10 +149,10 @@ def rod_division_demo(max_temperature, rod_length, thermal_conductivity, desired
         print("Verdict: Impossible to heat the rod in these conditions")
         return
 
-    time_function = make_time_function(max_temperature, thermal_conductivity, half_rod_length)
-
-    whole_divisions = np.ceil(half_rod_length / max_division_length)
+    whole_divisions = int(np.ceil(half_rod_length / max_division_length))
     whole_division_length = half_rod_length / whole_divisions
+
+    time_function = make_time_function(max_temperature, thermal_conductivity, whole_division_length)
 
     print_end_conditions('Regular solution',
                          max_temperature=max_temperature,
@@ -116,8 +182,8 @@ def rod_division_demo(max_temperature, rod_length, thermal_conductivity, desired
                          divisions=whole_divisions)
 
     optimal_max_temperature = find_function_argument_by_value(
-        lambda x: call_time_function_with_variable_max_temp(x, thermal_conductivity, whole_division_length,
-                                                            whole_division_length, max_time),
+        lambda x: call_time_function_with_variable_config(x, thermal_conductivity, whole_division_length,
+                                                          whole_division_length, max_time),
         desired_min_temperature, 0, max_temperature)
 
     print_end_conditions('Optimised max temperature',
@@ -125,13 +191,21 @@ def rod_division_demo(max_temperature, rod_length, thermal_conductivity, desired
                          max_time=max_time,
                          desired_min_temperature=desired_min_temperature,
                          estimated_max_temperature=optimal_max_temperature,
-                         estimated_min_temperature=call_time_function_with_variable_max_temp(optimal_max_temperature,
-                                                                                             thermal_conductivity,
-                                                                                             whole_division_length,
-                                                                                             whole_division_length,
-                                                                                             max_time),
+                         estimated_min_temperature=call_time_function_with_variable_config(optimal_max_temperature,
+                                                                                           thermal_conductivity,
+                                                                                           whole_division_length,
+                                                                                           whole_division_length,
+                                                                                           max_time),
                          estimated_time=max_time,
                          estimated_division_length=whole_division_length,
                          divisions=whole_divisions)
 
     print('Verdict: all optimisations successful')
+
+    rod_temperature_demo(max_temperature=optimal_max_temperature,
+                         rod_length=rod_length,
+                         thermal_conductivity=thermal_conductivity,
+                         heaters_amount=whole_divisions,
+                         rod_part_length=whole_division_length,
+                         time_to=max_time,
+                         graph_max_temperature=max_temperature)

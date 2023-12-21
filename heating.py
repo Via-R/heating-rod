@@ -3,7 +3,7 @@ from numpy import sin, cos, pi, exp
 
 from commons import make_printer
 
-dprint = make_printer(debug=False)
+dprint = make_printer(debug=True)
 
 
 def custom_floor(a, precision=0):
@@ -78,10 +78,12 @@ def find_max_division_length(max_time, rod_length, max_temperature, thermal_cond
 
         return rod_length
 
-    return find_function_argument_by_value(lambda x: time_function(x, max_time), desired_min_temperature, 0, rod_length)
+    return find_function_argument_by_value(
+        lambda x: call_time_function_with_variable_config(max_temperature, thermal_conductivity, x,
+                                                          x, max_time), desired_min_temperature, 1e-6, rod_length)
 
 
-def call_time_function_with_variable_max_temp(max_temperature, thermal_conductivity, rod_length, x, t):
+def call_time_function_with_variable_config(max_temperature, thermal_conductivity, rod_length, x, t):
     time_function = make_time_function(max_temperature, thermal_conductivity, rod_length)
 
     return time_function(x, t)
