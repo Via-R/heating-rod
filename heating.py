@@ -3,7 +3,7 @@ from numpy import sin, cos, pi, exp
 
 from commons import make_printer
 
-dprint = make_printer(debug=True)
+dprint = make_printer(debug=False)
 
 
 def custom_floor(a, precision=0):
