@@ -49,14 +49,9 @@ def temperature_function_demo(max_temperature, rod_length, thermal_conductivity)
 
     # Create initial temperature distribution along the rod
     x_values = np.linspace(0, rod_length, num_points)
-    initial_temperatures = []  # Temperature at time t=0
-
-    # Populate initial temperatures one point at a time
-    for x in x_values:
-        initial_temp_at_x = time_function(
-            x, 0
-        )  # Temperature at time t=0 for each point
-        initial_temperatures.append(initial_temp_at_x)
+    initial_temperatures = [
+        time_function(x, 0) for x in x_values
+    ]  # Temperature at time t=0
 
     # Create figure and axis for the plot
     fig, ax = plt.subplots()
