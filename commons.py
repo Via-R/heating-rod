@@ -1,7 +1,11 @@
 import argparse
+from typing import Callable, Any
+from argparse import Namespace
 
 
-def make_printer(debug=False):
+def make_printer(debug=False) -> Callable[..., Any]:
+    """Make a dprint function that only logs if :debug: is True."""
+
     def dprint(*args, **kwargs):
         if debug:
             print(*args, **kwargs)
@@ -9,7 +13,9 @@ def make_printer(debug=False):
     return dprint
 
 
-def parse_arguments():
+def parse_arguments() -> Namespace:
+    """Get arguments for the program run."""
+
     parser = argparse.ArgumentParser(
         description="Calculate rod division to heat it to minimum desired temperature."
     )
@@ -23,7 +29,7 @@ def parse_arguments():
     parser.add_argument(
         "--thermal-conductivity",
         type=float,
-        default=407.0,
+        default=401.0,
         help="Thermal conductivity coefficient",
     )
     parser.add_argument(
@@ -38,6 +44,11 @@ def parse_arguments():
         "--temperature-function-demo",
         action="store_true",
         help="Show time function demo",
+    )
+    parser.add_argument(
+        "--optimisation",
+        choices=["max_time", "max_temperature", "none"],
+        default="none",
     )
 
     return parser.parse_args()
