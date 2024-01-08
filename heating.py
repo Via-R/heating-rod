@@ -102,9 +102,7 @@ def find_max_division_length(
     :return float: max rod parts length to reach the specified conditions
     """
 
-    time_function = make_time_function(
-        max_temperature, thermal_diffusivity, rod_length
-    )
+    time_function = make_time_function(max_temperature, thermal_diffusivity, rod_length)
     max_heated_right_end_temperature = time_function(rod_length, max_time)
     if max_heated_right_end_temperature > desired_min_temperature:
         dprint("rod length is good enough")
@@ -135,9 +133,7 @@ def call_time_function_with_variable_config(
     :return float: temperature of the described rod at x, t
     """
 
-    time_function = make_time_function(
-        max_temperature, thermal_diffusivity, rod_length
-    )
+    time_function = make_time_function(max_temperature, thermal_diffusivity, rod_length)
 
     return time_function(x, t)
 

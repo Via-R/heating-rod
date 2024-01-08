@@ -59,9 +59,7 @@ def print_end_conditions(
     print("*" * 36, end="\n\n")
 
 
-def temperature_function_demo(
-    max_temperature, rod_length, thermal_diffusivity
-) -> None:
+def temperature_function_demo(max_temperature, rod_length, thermal_diffusivity) -> None:
     """
     Show an animation of how temperature changes in the rod with time.
 
@@ -76,9 +74,7 @@ def temperature_function_demo(
     num_points = 500  # Number of points along the rod
     delta_temperature = 0.001 * max_temperature  # Homogeneity threshold
 
-    time_function = make_time_function(
-        max_temperature, thermal_diffusivity, rod_length
-    )
+    time_function = make_time_function(max_temperature, thermal_diffusivity, rod_length)
 
     # Create initial temperature distribution along the rod
     x_values = np.linspace(0, rod_length, num_points)
