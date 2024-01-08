@@ -24,19 +24,19 @@ def parse_arguments() -> Namespace:
         "--max-temperature", type=float, default=100.0, help="Maximum temperature"
     )
     parser.add_argument(
-        "--rod-length", type=float, default=20.0, help="Length of the rod"
+        "--rod-length", type=float, default=20.0, help="Length of the rod [m]"
     )
     parser.add_argument(
-        "--thermal-conductivity",
+        "--thermal-diffusivity",
         type=float,
         default=401.0,
-        help="Thermal conductivity coefficient",
+        help="Thermal diffusivity coefficient [m^2/s]",
     )
     parser.add_argument(
         "--desired-min-temperature",
         type=float,
         default=40.0,
-        help="Desired minimum temperature",
+        help="Desired minimum temperature [K]",
     )
     parser.add_argument("--max-time", type=float, default=0.005, help="Maximum time")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")

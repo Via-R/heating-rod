@@ -47,7 +47,7 @@ def find_function_argument_by_value(
     Only works for functions monotonous in the given interval.
 
     :param func: y from y^-1(x)
-    :param desired_value: x y^-1(x)
+    :param desired_value: x from y^-1(x)
     :param arg_from: x left bound
     :param arg_to: x right bound
     :param max_iterations: hard limit on the search, will fail if y isn't monotonous on the interval
@@ -89,7 +89,7 @@ def find_function_argument_by_value(
 
 
 def find_max_division_length(
-    max_time, rod_length, max_temperature, thermal_conductivity, desired_min_temperature
+    max_time, rod_length, max_temperature, thermal_diffusivity, desired_min_temperature
 ) -> float:
     """
     Find max rod parts length to heat the whole rod to the desired temperature.
@@ -97,13 +97,13 @@ def find_max_division_length(
     :param float max_time: max possible time
     :param float rod_length: whole rod length
     :param float max_temperature: max time for the experiment
-    :param float thermal_conductivity: thermal conductivity coefficient of the rod's material
+    :param float thermal_diffusivity: thermal diffusivity coefficient of the rod's material
     :param float desired_min_temperature: desired min temperature of the whole rod
     :return float: max rod parts length to reach the specified conditions
     """
 
     time_function = make_time_function(
-        max_temperature, thermal_conductivity, rod_length
+        max_temperature, thermal_diffusivity, rod_length
     )
     max_heated_right_end_temperature = time_function(rod_length, max_time)
     if max_heated_right_end_temperature > desired_min_temperature:
@@ -113,7 +113,7 @@ def find_max_division_length(
 
     return find_function_argument_by_value(
         lambda x: call_time_function_with_variable_config(
-            max_temperature, thermal_conductivity, x, x, max_time
+            max_temperature, thermal_diffusivity, x, x, max_time
         ),
         desired_min_temperature,
         1e-6,
@@ -122,13 +122,13 @@ def find_max_division_length(
 
 
 def call_time_function_with_variable_config(
-    max_temperature, thermal_conductivity, rod_length, x, t
+    max_temperature, thermal_diffusivity, rod_length, x, t
 ) -> float:
     """
     Create a time function for the specified conditions and call it on x, t
 
     :param float max_temperature: max possible temperature
-    :param float thermal_conductivity: thermal conductivity coefficient of the rod's material
+    :param float thermal_diffusivity: thermal diffusivity coefficient of the rod's material
     :param float rod_length: whole rod length
     :param float x: position across the X axis of the rod
     :param float t: position in time
@@ -136,20 +136,20 @@ def call_time_function_with_variable_config(
     """
 
     time_function = make_time_function(
-        max_temperature, thermal_conductivity, rod_length
+        max_temperature, thermal_diffusivity, rod_length
     )
 
     return time_function(x, t)
 
 
 def make_time_function(
-    max_temperature, thermal_conductivity, rod_length
+    max_temperature, thermal_diffusivity, rod_length
 ) -> Callable[[float, float], float]:
     """
     Create a time function with the specified conditions.
 
     :param float max_temperature: max possible temperature
-    :param float thermal_conductivity: thermal conductivity coefficient of the rod's material
+    :param float thermal_diffusivity: thermal diffusivity coefficient of the rod's material
     :param float rod_length: whole rod length
     :return Callable[[float, float], float]: time function of type u(t, x)
     """
@@ -163,7 +163,7 @@ def make_time_function(
                 (cos(pi * (n + 0.5)) - 1)
                 / (2 * n + 1.0)
                 * sin(pi * (n + 0.5) / rod_length * x)
-                * exp(-thermal_conductivity * pi * (n + 0.5) / rod_length * t)
+                * exp(-thermal_diffusivity * pi * (n + 0.5) / rod_length * t)
             )
 
         return max_temperature + 4.0 * max_temperature / pi * calculate_infinite_series(

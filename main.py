@@ -9,14 +9,14 @@ def main():
 
     if args.temperature_function_demo:
         temperature_function_demo(
-            args.max_temperature, args.rod_length, args.thermal_conductivity
+            args.max_temperature, args.rod_length, args.thermal_diffusivity
         )
         return
 
     rod_division_demo(
         max_temperature=args.max_temperature,
         rod_length=args.rod_length,
-        thermal_conductivity=args.thermal_conductivity,
+        thermal_diffusivity=args.thermal_diffusivity,
         desired_min_temperature=args.desired_min_temperature,
         max_time=args.max_time,
         optimisation=args.optimisation,

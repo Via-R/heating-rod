@@ -18,7 +18,7 @@ def print_end_conditions(
     max_temperature,
     max_time,
     desired_min_temperature,
-    thermal_conductivity,
+    thermal_diffusivity,
     estimated_max_temperature,
     estimated_min_temperature,
     estimated_time,
@@ -33,7 +33,7 @@ def print_end_conditions(
     :param float max_temperature: max temperature (initial condition)
     :param float max_time: max time (initial condition)
     :param float desired_min_temperature: desired minimal temperature across the rod (initial condition)
-    :param float thermal_conductivity: thermal conductivity coefficient of the given rod's material
+    :param float thermal_diffusivity: thermal diffusivity coefficient of the given rod's material
     :param float estimated_max_temperature: max temperature reached during the experiment
     :param float estimated_min_temperature: min rod temperature at the end of the experiment
     :param float estimated_time: time passed to reach the desired state
@@ -47,7 +47,7 @@ def print_end_conditions(
         f"Min temperature: {desired_min_temperature}º K\n"
         f"Time: {max_time} seconds\n"
         f"Whole rod length: {rod_length} meters\n"
-        f"Thermal conductivity: {thermal_conductivity} W·m^−1·K^−1\n"
+        f"Thermal diffusivity: {thermal_diffusivity} m^2/s\n"
     )
     print("-" * 24)
     print(
@@ -60,14 +60,14 @@ def print_end_conditions(
 
 
 def temperature_function_demo(
-    max_temperature, rod_length, thermal_conductivity
+    max_temperature, rod_length, thermal_diffusivity
 ) -> None:
     """
     Show an animation of how temperature changes in the rod with time.
 
     :param float max_temperature: max possible temperature
     :param float rod_length: whole rod length
-    :param float thermal_conductivity: thermal conductivity coefficient of the rod's material
+    :param float thermal_diffusivity: thermal diffusivity coefficient of the rod's material
     """
 
     time_from = 0
@@ -77,7 +77,7 @@ def temperature_function_demo(
     delta_temperature = 0.001 * max_temperature  # Homogeneity threshold
 
     time_function = make_time_function(
-        max_temperature, thermal_conductivity, rod_length
+        max_temperature, thermal_diffusivity, rod_length
     )
 
     # Create initial temperature distribution along the rod
@@ -108,7 +108,7 @@ def temperature_function_demo(
         current_temperatures[current_temperatures < 0] = 0
 
         line.set_ydata(current_temperatures.tolist())
-        frame_text.set_text(f"Time passed: {iteration_num}/{time_iterations}")
+        frame_text.set_text(f"Time iterations: {iteration_num}/{time_iterations}")
 
         # Check for homogeneity to stop the animation
         if (
@@ -140,7 +140,7 @@ def temperature_function_demo(
 def rod_temperature_demo(
     max_temperature,
     rod_length,
-    thermal_conductivity,
+    thermal_diffusivity,
     heaters_amount,
     rod_part_length,
     desired_min_temperature,
@@ -155,7 +155,7 @@ def rod_temperature_demo(
 
     :param float max_temperature: max temperature across the rod
     :param float rod_length: whole rod length
-    :param float thermal_conductivity: thermal conductivity coefficient
+    :param float thermal_diffusivity: thermal diffusivity coefficient
     :param int heaters_amount: amount of rod parts / heating elements
     :param float rod_part_length: rod parts length
     :param float desired_min_temperature: desired min temperature of the whole rod
@@ -168,7 +168,7 @@ def rod_temperature_demo(
     """
 
     time_function = make_time_function(
-        max_temperature, thermal_conductivity, rod_part_length
+        max_temperature, thermal_diffusivity, rod_part_length
     )
 
     rod_part_x_values = np.linspace(0, rod_part_length, rod_part_points_amount)
@@ -249,7 +249,7 @@ def rod_temperature_demo(
 def rod_division_demo(
     max_temperature,
     rod_length,
-    thermal_conductivity,
+    thermal_diffusivity,
     desired_min_temperature,
     max_time,
     optimisation,
@@ -259,7 +259,7 @@ def rod_division_demo(
 
     :param float max_temperature: max possible temperature for the rod
     :param float rod_length: whole rod length
-    :param float thermal_conductivity: thermal conductivity coefficient of the rod's material
+    :param float thermal_diffusivity: thermal diffusivity coefficient of the rod's material
     :param float desired_min_temperature: desired min temperature across the rod
     :param float max_time: max possible time for the process
     :param str optimisation: selected type of optimisations: max_time, max_temperature or none
@@ -270,7 +270,7 @@ def rod_division_demo(
         max_time,
         half_rod_length,
         max_temperature,
-        thermal_conductivity,
+        thermal_diffusivity,
         desired_min_temperature,
     )
     if not max_division_length:
@@ -281,7 +281,7 @@ def rod_division_demo(
     whole_division_length = half_rod_length / whole_divisions
 
     time_function = make_time_function(
-        max_temperature, thermal_conductivity, whole_division_length
+        max_temperature, thermal_diffusivity, whole_division_length
     )
 
     print_end_conditions(
@@ -290,7 +290,7 @@ def rod_division_demo(
         max_temperature=max_temperature,
         max_time=max_time,
         desired_min_temperature=desired_min_temperature,
-        thermal_conductivity=thermal_conductivity,
+        thermal_diffusivity=thermal_diffusivity,
         estimated_max_temperature=max_temperature,
         estimated_min_temperature=time_function(whole_division_length, max_time),
         estimated_time=max_time,
@@ -316,7 +316,7 @@ def rod_division_demo(
             max_temperature=max_temperature,
             max_time=max_time,
             desired_min_temperature=desired_min_temperature,
-            thermal_conductivity=thermal_conductivity,
+            thermal_diffusivity=thermal_diffusivity,
             estimated_max_temperature=max_temperature,
             estimated_min_temperature=time_function(
                 whole_division_length, optimal_time
@@ -329,7 +329,7 @@ def rod_division_demo(
         rod_temperature_demo(
             max_temperature=max_temperature,
             rod_length=rod_length,
-            thermal_conductivity=thermal_conductivity,
+            thermal_diffusivity=thermal_diffusivity,
             heaters_amount=whole_divisions,
             rod_part_length=whole_division_length,
             desired_min_temperature=desired_min_temperature,
@@ -341,7 +341,7 @@ def rod_division_demo(
         optimal_max_temperature = find_function_argument_by_value(
             lambda x: call_time_function_with_variable_config(
                 x,
-                thermal_conductivity,
+                thermal_diffusivity,
                 whole_division_length,
                 whole_division_length,
                 max_time,
@@ -357,11 +357,11 @@ def rod_division_demo(
             max_temperature=max_temperature,
             max_time=max_time,
             desired_min_temperature=desired_min_temperature,
-            thermal_conductivity=thermal_conductivity,
+            thermal_diffusivity=thermal_diffusivity,
             estimated_max_temperature=optimal_max_temperature,
             estimated_min_temperature=call_time_function_with_variable_config(
                 optimal_max_temperature,
-                thermal_conductivity,
+                thermal_diffusivity,
                 whole_division_length,
                 whole_division_length,
                 max_time,
@@ -374,7 +374,7 @@ def rod_division_demo(
         rod_temperature_demo(
             max_temperature=optimal_max_temperature,
             rod_length=rod_length,
-            thermal_conductivity=thermal_conductivity,
+            thermal_diffusivity=thermal_diffusivity,
             heaters_amount=whole_divisions,
             rod_part_length=whole_division_length,
             desired_min_temperature=desired_min_temperature,
@@ -388,7 +388,7 @@ def rod_division_demo(
         rod_temperature_demo(
             max_temperature=max_temperature,
             rod_length=rod_length,
-            thermal_conductivity=thermal_conductivity,
+            thermal_diffusivity=thermal_diffusivity,
             heaters_amount=whole_divisions,
             rod_part_length=whole_division_length,
             desired_min_temperature=desired_min_temperature,
