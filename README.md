@@ -1,6 +1,6 @@
 # <p align="center">1D Rod heating task solver ∙ ![Windows support](https://badgen.net/badge/icon/Windows?icon=windows&label) ![MacOS support](https://badgen.net/badge/icon/MacOS?icon=apple&label) ![Linux](https://badgen.net/badge/icon/Linux?icon=gnome&label)</p>
 
-<p align="center"><img src="images/process-100" alt="Solution example"/></p>
+<p align="center"><img src="images/process-100.png" alt="Solution example"/></p>
 
 This is a demo project which emulates a solution for a 1D rod heating problem. It is made as a console tool to solve the task of heating a perfectly insulated rod with a heating element until its minimum temperature reaches a preset threshold. There are two optimisations available: for the maximum time and the heating element temperature. Both textual and visual representations of the solution are given.
 
