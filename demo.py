@@ -179,12 +179,13 @@ def rod_temperature_demo(
     fig, ax = plt.subplots(num=DEMO_WINDOW_NAME)
     ax.set_ylim([0, graph_max_temperature or max_temperature])
     (line,) = ax.plot(
-        x_values, rod_temperatures, color="red", label="actual temperature"
+        x_values, rod_temperatures, color="black", label="actual temperature"
     )
     ax.plot(
         x_values,
         [desired_min_temperature] * heaters_amount * 2 * rod_part_points_amount,
-        color="grey",
+        color="gray",
+        linestyle="--",
         label="desired temperature threshold",
     )
     frame_text = ax.text(
@@ -218,6 +219,9 @@ def rod_temperature_demo(
         if iteration_num > -1:
             frame_text.set_text(f"Time passed: {iteration_num}/{time_iterations}")
 
+        # if iteration_num in [0, 33, 66, 100]:
+        #     fig.savefig(f"images/process-{iteration_num}.png", dpi=150, bbox_inches="tight")
+
         if iteration_num == time_iterations:
             ani.event_source.stop()
 
@@ -233,8 +237,8 @@ def rod_temperature_demo(
         blit=True,
     )
 
-    plt.xlabel("Position along the rod")
-    plt.ylabel("Temperature")
+    plt.xlabel("Position along the rod", fontsize=16)
+    plt.ylabel("Temperature", fontsize=16)
     plt.title(
         f"Temperature distribution, max temp: {max_temperature:.2f}, max time: {time_to:.5f}"
     )
